@@ -19,8 +19,14 @@ adaBoost <- function(formula, data, depth, noTrees, newdata=NULL ) {
   
   data[,Y.names] = factor(data[,Y.names])
   labs = levels(data[,Y.names])
-  formula <- formula(paste( Y.names, paste(X.names,sep=" + "), sep = " ~ "  ))
-  data <- data[,c(Y.names,X.names)]
+  
+  weaklearner = function(formula, data, w , depth) {
+    environment(formula) <- environment()
+    rpart(formula, data, weights = w, control = rpart.control(maxdepth = depth))
+  }
+  
+  #formula <- formula(paste( Y.names, paste(X.names,sep=" + "), sep = " ~ "  ))
+  #data <- data[,c(Y.names,X.names)]
   
   #Initialize the observation weights, w_i = 1/N
   N = nrow(data)
@@ -33,8 +39,7 @@ adaBoost <- function(formula, data, depth, noTrees, newdata=NULL ) {
   
   for (iter in 1:noTrees) {
     #Fit a classifier to the training data using weights w_i
-    trees[[iter]] <- rpart( formula , data=data , weights = w,
-                   control=rpart.control(maxdepth = depth))
+    trees[[iter]] <-  weaklearner(formula, data, w , depth)
     #Save predictions
     G[,iter] = predict(trees[[iter]], data, type="class")
     #Compute the error of the classifier
@@ -51,7 +56,7 @@ adaBoost <- function(formula, data, depth, noTrees, newdata=NULL ) {
   colnames(pred) = labs
   #Compute weighted votes for each label by observation
   for (lab in labs) {
-    pred[,lab] = rowSums ( (G == lab) %*% alpha ) 
+    pred[,lab] = ( (G == lab) %*% alpha ) 
   }
   predLabels = apply( pred,1,function(x) labs[which.max(x)] )
   

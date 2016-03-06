@@ -20,7 +20,7 @@ dataTrain <- spamdata[trainIdx,]
 dataTest <- spamdata[-trainIdx,]
 
 #Possible number of iterations and depth
-noIterations <- seq(1, 2500, by = 100)
+noIterations <- seq(1, 200, by = 5)
 depth <- 5
 
 #Initialize vector to save training and test errors
@@ -33,7 +33,7 @@ boost.gbm <- gbm(formula = y ~ .,
                  distribution = "adaboost",
                  data = dataTrain,
                  shrinkage = 1,
-                 n.trees = 2500,
+                 n.trees = 200,
                  interaction.depth = depth)
 
 for (i in 1:length(noIterations)) {
@@ -48,7 +48,7 @@ train.error.my <- rep(NA, length(noIterations))
 test.error.my <- rep(NA, length(noIterations))
 
 #boosting with built-in function
-myboost <- adaBoost(formula = y ~ . , dataTrain , depth, 2500 )
+myboost <- adaBoost(formula = y ~ . , dataTrain , depth, 200 )
 
 for (i in 1:length(noIterations)) {
   train.error.my[i] <- mean( my.predict.adaBoost(myboost$trees,
@@ -63,24 +63,19 @@ for (i in 1:length(noIterations)) {
 
 # combining errors in a data frame
 library(reshape2)
+library(dplyr)
 errors <- data.frame(Iterations = noIterations,
                      train.error.my = train.error.my,
                      test.error.my = test.error.my,
                      train.error.gbm = train.error.gbm,
-                     test.error.gbm = test.error.gbm)  %>%
-  melt(id.vars = "Iterations")
+                     test.error.gbm = test.error.gbm)  %>% melt(id.vars = "Iterations")
 
 # plotting everything
+pdf(file="PS6/adaBoost.pdf")
 library(ggplot2)
-plotBoost <- 
   ggplot(data = errors,
          aes(x = Iterations, y = value, color = variable)) + 
-  geom_line() 
-+
-  scale_y_continuous( "Test error", 
-                      limits = c(0,0.5),
-                      breaks = seq(0, 0.5, 0.1)) + 
-  scale_color_manual("", values = c("red", "blue"),
-                     labels = c("Random forest", "6 node boosting")) +
-  theme_bw() +
-  theme(legend.position = c(1,1), legend.justification = c(1,1))
+  geom_line() +
+  scale_y_continuous("Error") +
+  scale_colour_discrete("")
+dev.off()
