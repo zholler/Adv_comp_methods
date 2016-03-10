@@ -24,10 +24,7 @@ adaBoost <- function(formula, data, depth, noTrees, newdata=NULL ) {
     environment(formula) <- environment()
     rpart(formula, data, weights = w, control = rpart.control(maxdepth = depth))
   }
-  
-  #formula <- formula(paste( Y.names, paste(X.names,sep=" + "), sep = " ~ "  ))
-  #data <- data[,c(Y.names,X.names)]
-  
+
   #Initialize the observation weights, w_i = 1/N
   N = nrow(data)
   w = rep(1/N,N)

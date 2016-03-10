@@ -1,5 +1,5 @@
 setwd("/home/zsuzsa/Documents/Adv_comp_methods")
-
+source("PS6/adaBoost.R")
 spamdata <- read.csv("spambase.data", header=FALSE)
 
 names(spamdata) <- c("v_make", "v_address", "v_all", "v_3d", "v_our", "v_over", 
@@ -14,8 +14,8 @@ names(spamdata) <- c("v_make", "v_address", "v_all", "v_3d", "v_our", "v_over",
                  "v_longest", "v_total", "y")
 
 # randomly divide the dataset
-set.seed(34624)
-trainIdx <- sample(1:nrow(spamdata), floor(0.7*nrow(spamdata)))
+set.seed(1234)
+trainIdx <- sample(1:nrow(spamdata), floor(0.6*nrow(spamdata)))
 dataTrain <- spamdata[trainIdx,]
 dataTest <- spamdata[-trainIdx,]
 
@@ -34,7 +34,8 @@ boost.gbm <- gbm(formula = y ~ .,
                  data = dataTrain,
                  shrinkage = 1,
                  n.trees = 200,
-                 interaction.depth = depth)
+                 interaction.depth = depth,
+                 bag.fraction = 1)
 
 for (i in 1:length(noIterations)) {
   train.error.gbm[i] <- mean(((predict(boost.gbm, dataTrain, n.trees = noIterations[i], 
@@ -74,8 +75,10 @@ errors <- data.frame(Iterations = noIterations,
 pdf(file="PS6/adaBoost.pdf")
 library(ggplot2)
   ggplot(data = errors,
-         aes(x = Iterations, y = value, color = variable)) + 
-  geom_line() +
+         aes(x = Iterations, y = value, color = variable, linetype=variable )) + 
+  geom_line( ) +
+  #change order, labels, drop factors
   scale_y_continuous("Error") +
-  scale_colour_discrete("")
+  scale_color_manual( "Error type",values=c("blue","green","blue","green")) +
+  scale_linetype_manual( "Error type",values=c("solid","solid","dashed","dashed") )
 dev.off()
